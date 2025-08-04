@@ -1,27 +1,21 @@
 {
-  "name": "comparison-engine",
+  "name": "visual-regression-engine",
   "version": "1.0.0",
-  "description": "A visual comparison engine for p5.js images with intelligent diff detection",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "description": "A modular visual comparison engine for Processing and p5.js regression testing",
+  "main": "src/index.js",
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
     "test": "jest",
+    "lint": "eslint src/",
+    "build": "npm run lint && npm run test",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "p5js",
     "visual-testing",
+    "regression-testing",
+    "p5js",
+    "processing",
     "image-comparison",
-    "diff",
-    "canvas",
-    "testing"
+    "creative-coding"
   ],
   "author": "Your Name",
   "license": "MIT",
@@ -29,24 +23,22 @@
     "p5": "^1.0.0"
   },
   "dependencies": {
-    "pixelmatch": "^5.3.0"
+    "pixelmatch": "^5.3.0",
+    "canvas": "^2.11.2"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.0.0",
-    "@rollup/plugin-commonjs": "^24.0.0",
-    "@rollup/plugin-typescript": "^11.0.0",
-    "@types/p5": "^1.7.0",
-    "rollup": "^3.0.0",
-    "typescript": "^5.0.0",
-    "jest": "^29.0.0",
-    "@types/jest": "^29.0.0"
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Vaivaswat2244/comparison-engine"
+    "url": "https://github.com/Vaivaswat2244/processing-comparison-engine"
   },
   "bugs": {
-    "url": "https://github.com/Vaivaswat2244/comparison-engine/issues"
+    "url": "https://github.com/Vaivaswat2244/procesing-comparison-engine/issues"
   },
-  "homepage": "https://github.com/Vaivaswat2244/comparison-engine#readme"
+  "homepage": "https://github.com/Vaivaswat2244/processing-comparison-engine#readme"
 }
