@@ -1,4 +1,3 @@
-// src/core/ImageProcessor.js
 const { createCanvas, createImageData, Image } = require('canvas');
 
 class ImageProcessor {
@@ -32,18 +31,20 @@ class ImageProcessor {
   }
 
   async _toCanvas(input) {
-    if (input instanceof HTMLCanvasElement || (input.getContext)) {
+    // Check if it's already a canvas (Node.js canvas or browser canvas)
+    if (input && typeof input.getContext === 'function' && input.width && input.height) {
       return input;
     }
     
-    if (input.data && input.width && input.height) {
-      
+    // Check if it's ImageData
+    if (input && input.data && input.width && input.height && input.data instanceof Uint8ClampedArray) {
       const canvas = createCanvas(input.width, input.height);
       const ctx = canvas.getContext('2d');
       ctx.putImageData(input, 0, 0);
       return canvas;
     }
     
+    // Check if it's a Buffer
     if (Buffer.isBuffer(input)) {
       const img = new Image();
       img.src = input;
@@ -53,7 +54,15 @@ class ImageProcessor {
       return canvas;
     }
 
-    throw new Error('Unsupported image input type');
+    // Check if it's an Image object from canvas library
+    if (input && typeof input === 'object' && input.width && input.height && input.src) {
+      const canvas = createCanvas(input.width, input.height);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(input, 0, 0);
+      return canvas;
+    }
+
+    throw new Error(`Unsupported image input type: ${typeof input}. Expected Canvas, ImageData, Buffer, or Image object.`);
   }
 
   _calculateScale(canvas, maxSide) {

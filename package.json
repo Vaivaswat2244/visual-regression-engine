@@ -23,22 +23,23 @@
     "p5": "^1.0.0"
   },
   "dependencies": {
-    "pixelmatch": "^5.3.0",
-    "canvas": "^2.11.2"
+    "canvas": "^2.11.2",
+    "jsdom": "^26.1.0",
+    "pixelmatch": "^5.3.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "eslint": "^8.56.0"
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0"
   },
   "engines": {
     "node": ">=14.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Vaivaswat2244/processing-comparison-engine"
+    "url": "https://github.com/Vaivaswat2244/visual-regression-engine"
   },
   "bugs": {
-    "url": "https://github.com/Vaivaswat2244/procesing-comparison-engine/issues"
+    "url": "https://github.com/Vaivaswat2244/visual-regression-engine"
   },
-  "homepage": "https://github.com/Vaivaswat2244/processing-comparison-engine#readme"
+  "homepage": "https://github.com/Vaivaswat2244/visual-regression-engine"
 }
