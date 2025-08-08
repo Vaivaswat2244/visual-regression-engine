@@ -1,6 +1,6 @@
 // examples/basic-usage.js
 const VisualComparisonEngine = require('../src/index');
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas} = require('canvas');
 const fs = require('fs').promises;
 
 async function basicExample() {
@@ -69,7 +69,7 @@ async function saveDiffImage(imageData, filename) {
   const canvas = createCanvas(imageData.width, imageData.height);
   const ctx = canvas.getContext('2d');
   ctx.putImageData(imageData, 0, 0);
-  
+
   const buffer = canvas.toBuffer('image/png');
   await fs.writeFile(filename, buffer);
 }

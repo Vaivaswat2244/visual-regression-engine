@@ -1,4 +1,4 @@
-const { createCanvas, createImageData, Image } = require('canvas');
+const { createCanvas, Image } = require('canvas');
 
 class ImageProcessor {
   constructor(options = {}) {
@@ -10,7 +10,7 @@ class ImageProcessor {
     const expectedCanvas = await this._toCanvas(expected);
 
     const scale = this._calculateScale(expectedCanvas, options.maxSide);
-    
+
     const resizedActual = this._resizeImage(actualCanvas, scale);
     const resizedExpected = this._resizeImage(expectedCanvas, scale);
 
@@ -30,12 +30,12 @@ class ImageProcessor {
     };
   }
 
-  async _toCanvas(input) {
+  _toCanvas(input) {
     // Check if it's already a canvas (Node.js canvas or browser canvas)
     if (input && typeof input.getContext === 'function' && input.width && input.height) {
       return input;
     }
-    
+
     // Check if it's ImageData
     if (input && input.data && input.width && input.height && input.data instanceof Uint8ClampedArray) {
       const canvas = createCanvas(input.width, input.height);
@@ -43,7 +43,7 @@ class ImageProcessor {
       ctx.putImageData(input, 0, 0);
       return canvas;
     }
-    
+
     // Check if it's a Buffer
     if (Buffer.isBuffer(input)) {
       const img = new Image();
@@ -69,17 +69,17 @@ class ImageProcessor {
     const scale = Math.min(maxSide / canvas.width, maxSide / canvas.height);
     const ratio = canvas.width / canvas.height;
     const narrow = ratio !== 1;
-    
+
     return narrow ? scale * 2 : scale;
   }
 
   _resizeImage(canvas, scale) {
     const newWidth = Math.ceil(canvas.width * scale);
     const newHeight = Math.ceil(canvas.height * scale);
-    
+
     const resizedCanvas = createCanvas(newWidth, newHeight);
     const ctx = resizedCanvas.getContext('2d');
-    
+
     ctx.drawImage(canvas, 0, 0, newWidth, newHeight);
     return resizedCanvas;
   }
@@ -87,12 +87,12 @@ class ImageProcessor {
   _createStandardizedCanvas(sourceCanvas, width, height, backgroundColor) {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
-    
+
     ctx.fillStyle = `rgba(${backgroundColor.join(',')})`;
     ctx.fillRect(0, 0, width, height);
 
     ctx.drawImage(sourceCanvas, 0, 0);
-    
+
     return canvas;
   }
 }

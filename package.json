@@ -3,11 +3,22 @@
   "version": "1.0.0",
   "description": "A modular visual comparison engine for Processing and p5.js regression testing",
   "main": "src/index.js",
+  "files": [
+    "src/",
+    "examples/",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
-    "test": "jest",
-    "lint": "eslint src/",
-    "build": "npm run lint && npm run test",
-    "prepublishOnly": "npm run build"
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch --passWithNoTests",
+    "test:coverage": "jest --coverage --passWithNoTests",
+    "lint": "eslint src/ examples/",
+    "lint:fix": "eslint src/ examples/ --fix",
+    "build": "npm run lint",
+    "prepublishOnly": "npm run build",
+    "example": "node examples/basic-usage.js",
+    "clean": "rm -rf coverage/ *.tgz"
   },
   "keywords": [
     "visual-testing",
@@ -15,9 +26,17 @@
     "p5js",
     "processing",
     "image-comparison",
-    "creative-coding"
+    "creative-coding",
+    "testing",
+    "automation",
+    "canvas",
+    "pixelmatch",
+    "visual-regression"
   ],
-  "author": "Your Name",
+  "author": {
+    "name": "Vaivaswat",
+    "url": "https://github.com/Vaivaswat2244"
+  },
   "license": "MIT",
   "peerDependencies": {
     "p5": "^1.0.0"
@@ -36,10 +55,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Vaivaswat2244/visual-regression-engine"
+    "url": "git+https://github.com/Vaivaswat2244/visual-regression-engine.git"
   },
   "bugs": {
-    "url": "https://github.com/Vaivaswat2244/visual-regression-engine"
+    "url": "https://github.com/Vaivaswat2244/visual-regression-engine/issues"
   },
-  "homepage": "https://github.com/Vaivaswat2244/visual-regression-engine"
+  "homepage": "https://github.com/Vaivaswat2244/visual-regression-engine#readme"
 }

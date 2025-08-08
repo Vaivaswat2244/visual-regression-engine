@@ -1,5 +1,5 @@
 const pixelmatch = require('pixelmatch');
-const { createCanvas, createImageData } = require('canvas');
+const { createImageData } = require('canvas');
 const ClusterAnalyzer = require('./ClusterAnalyzer');
 const ImageProcessor = require('./ImageProcessor');
 const { ValidationError } = require('../utils/errors');
@@ -48,9 +48,9 @@ class ImageComparator {
     }
 
     const clusterAnalysis = this.clusterAnalyzer.analyzeClusters(
-      diffBuffer, 
-      width, 
-      height, 
+      diffBuffer,
+      width,
+      height,
       mergedOptions
     );
 
@@ -77,9 +77,9 @@ class ImageComparator {
 
   _evaluateSignificance(analysis, options) {
     const { significantPixels, significantClusters } = analysis;
-    
+
     return (
-      significantPixels === 0 || 
+      significantPixels === 0 ||
       (
         significantPixels <= options.maxTotalDiffPixels &&
         significantClusters <= options.maxSignificantClusters

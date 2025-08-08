@@ -1,5 +1,5 @@
 const ImageComparator = require('./core/ImageComparator');
-const { ValidationError, ComparisonError } = require('./utils/errors');
+const { ComparisonError } = require('./utils/errors');
 
 class VisualComparisonEngine {
   constructor(options = {}) {
@@ -15,7 +15,7 @@ class VisualComparisonEngine {
       lineShiftThreshold: options.lineShiftThreshold || 0.8,
       ...options
     };
-    
+
     this.comparator = new ImageComparator(this.options);
   }
 
@@ -44,12 +44,12 @@ class VisualComparisonEngine {
   async batchCompare(imagePairs, options = {}) {
     const results = [];
     const mergedOptions = { ...this.options, ...options };
-    
+
     for (const pair of imagePairs) {
       try {
         const result = await this.comparator.compare(
-          pair.actual, 
-          pair.expected, 
+          pair.actual,
+          pair.expected,
           mergedOptions
         );
         results.push({
@@ -64,7 +64,7 @@ class VisualComparisonEngine {
         });
       }
     }
-    
+
     return results;
   }
 }
