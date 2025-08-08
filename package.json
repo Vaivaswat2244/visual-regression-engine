@@ -1,6 +1,6 @@
 {
   "name": "visual-regression-engine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A modular visual comparison engine for Processing and p5.js regression testing",
   "main": "src/index.js",
   "files": [
