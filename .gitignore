@@ -98,10 +98,10 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# Test output directories
-test/diff-output/
-test/absolute/
-test/reference/
+# # Test output directories
+# test/diff-output/
+# test/absolute/
+# test/reference/
 
 # Log files
 *.log
