@@ -14,21 +14,21 @@ jobs:
           - os: ubuntu-latest
             target: linux-x64-18.17.0
             output: visual-regression-engine-linux
-          - os: windows-latest  
+          - os: windows-latest
             target: windows-x64-18.17.0
             output: visual-regression-engine-win.exe
           - os: macos-latest
-            target: darwin-x64-18.17.0
+            target: darwin-x64-18.17.0 # Use 'macos-x64' if 'darwin-x64' causes issues in the future
             output: visual-regression-engine-macos
     
     steps:
-    - uses: actions/checkout@v4    # ✅ Updated from v3
+    - uses: actions/checkout@v4
     
     - name: Setup Node.js
-      uses: actions/setup-node@v4  # ✅ Updated from v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'               # ✅ Added caching
+        cache: 'npm'
         
     - name: Install dependencies
       run: npm ci
@@ -36,21 +36,59 @@ jobs:
     - name: Install nexe
       run: npm install -g nexe@4.0.0-rc.6
       
+    # --- Start: Fix for Python 'distutils' error on Linux ---
+    - name: Install build dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt update
+        # Install build-essential for compilers, git for Node.js source, and python2
+        sudo apt install -y build-essential git python2
+        # Create a symlink for 'python' to point to 'python2' for older configure scripts
+        sudo ln -sf /usr/bin/python2 /usr/bin/python
+    # --- End: Fix for Python 'distutils' error on Linux ---
+
+    # --- Start: Fix for Python 'distutils' error on macOS ---
+    - name: Install build dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        # macOS runners usually have Xcode command line tools and git.
+        # We need python@2 for the build script. Homebrew is the way.
+        brew install python@2 # Install python2
+        # Ensure python2 is used. Homebrew might add it to PATH.
+        # If not, you might need to manually symlink or set PATH similar to Linux
+        # For example: sudo ln -sf /usr/local/bin/python2 /usr/local/bin/python
+        # However, Node's configure usually finds it if installed by Homebrew.
+    # --- End: Fix for Python 'distutils' error on macOS ---
+
+    # --- Start: Install build dependencies (Windows) ---
+    - name: Install build dependencies (Windows)
+      if: runner.os == 'Windows'
+      # Visual Studio Build Tools are typically pre-installed.
+      # Python 3 is also usually available. If issues, might need specific python version install.
+      run: |
+        # Check if Python is available, it should be.
+        python --version || echo "Python not found, might cause issues."
+        # No specific build tool installation generally required on Windows runners for Node.js
+    # --- End: Install build dependencies (Windows)
+      
     - name: Build binary
       run: |
         mkdir -p binaries
+        # The --build flag will now use the correctly configured Python environment
         nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
       
     - name: Test binary (Unix)
       if: runner.os != 'Windows'
       run: |
         chmod +x binaries/${{ matrix.output }}
-        ./binaries/${{ matrix.output }} --version || echo "Binary created successfully"
+        # Run with 'true' if the command exits with non-zero, allowing the workflow to continue
+        ./binaries/${{ matrix.output }} --version || true # Use 'true' instead of 'echo', as 'echo' also returns 0
         
     - name: Test binary (Windows)
       if: runner.os == 'Windows'
       run: |
-        binaries/${{ matrix.output }} --version || echo "Binary created successfully"
+        # Run with 'true' if the command exits with non-zero, allowing the workflow to continue
+        binaries/${{ matrix.output }} --version || true # Use 'true' instead of 'echo'
       
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -61,11 +99,13 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    # Added permissions to allow 'contents: write' for creating a release
     permissions:
-      contents: write            # ✅ Added permissions
+      contents: write
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v4  # ✅ Updated from v3
+      # No 'with' needed if you want all artifacts from the run
+      uses: actions/download-artifact@v4
       
     - name: Create Release
       uses: softprops/action-gh-release@v1
