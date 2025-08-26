@@ -33,9 +33,6 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build TypeScript
-      run: npm run build
-      
     - name: Install nexe
       run: npm install -g nexe@4.0.0-rc.6
       
