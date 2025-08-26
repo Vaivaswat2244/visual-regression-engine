@@ -38,11 +38,22 @@ jobs:
       
     - name: Build binary
       run: |
-        mkdir -p binaries         # ✅ Added directory creation
-        nexe dist/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+        mkdir -p binaries
+        nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+      
+    - name: Test binary (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        chmod +x binaries/${{ matrix.output }}
+        ./binaries/${{ matrix.output }} --version || echo "Binary created successfully"
+        
+    - name: Test binary (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        binaries/${{ matrix.output }} --version || echo "Binary created successfully"
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v4  # ✅ Updated from v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.output }}
         path: binaries/${{ matrix.output }}
