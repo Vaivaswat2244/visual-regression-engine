@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { VisualRegressionEngine } = require('./index.js');
+const { VisualRegressionEngine } = require('../src/index.js');
 
 async function main() {
   const args = process.argv.slice(2);
@@ -62,7 +62,7 @@ Options:
 }
 
 function parseArgs(args) {
-  const config = { format: 'json', threshold: 0.1 };
+  const config = { threshold: 0.1 };
   
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -77,9 +77,6 @@ function parseArgs(args) {
         break;
       case '--threshold':
         config.threshold = parseFloat(args[++i]);
-        break;
-      case '--format':
-        config.format = args[++i];
         break;
     }
   }
