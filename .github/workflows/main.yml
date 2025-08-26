@@ -11,13 +11,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04  # Use older Ubuntu with Python 3.8
             target: linux-x64-18.17.0
             output: visual-regression-engine-linux
-          - os: windows-latest
+          - os: windows-2022
             target: windows-x64-18.17.0
             output: visual-regression-engine-win.exe
-          - os: macos-13  # Use older macOS version with Python 3.9
+          - os: macos-12  # Use older macOS with Python 3.9
             target: darwin-x64-18.17.0
             output: visual-regression-engine-macos
 
@@ -30,18 +30,17 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      # Fix Python distutils issue on macOS
-      - name: Setup Python (macOS)
-        if: runner.os == 'macOS'
+      # Setup Python with distutils support
+      - name: Setup Python with distutils
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Use Python 3.9 which has distutils
+          python-version: '3.9'  # Python 3.9 has distutils
 
-      - name: Install Python distutils (Ubuntu)
+      - name: Install build dependencies (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-distutils python3-dev build-essential
+          sudo apt-get install -y python3-dev build-essential
 
       - name: Install dependencies
         run: npm ci
@@ -54,9 +53,12 @@ jobs:
         run: |
           rm -rf ~/.nexe || true
           
-      - name: Build binary
+      - name: Build binary with retry
         run: |
           mkdir -p binaries
+          # Try building with explicit Python path
+          export PYTHON=$(which python3)
+          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }} || \
           nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
 
       - name: Test binary (Unix)
