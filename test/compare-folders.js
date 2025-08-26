@@ -1,14 +1,11 @@
-// test/compare-folders.js
 const VisualComparisonEngine = require('../src/index');
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs').promises;
 const path = require('path');
 
-// --- Configuration ---
 const REFERENCE_DIR = path.join(__dirname, 'reference');
 const ACTUAL_DIR = path.join(__dirname, 'absolute');
 const DIFF_DIR = path.join(__dirname, 'diff-output');
-// --- End Configuration ---
 
 class FolderComparer {
   constructor() {
@@ -25,10 +22,9 @@ class FolderComparer {
     console.log(`Actual:    ${ACTUAL_DIR}`);
     console.log(`Output:    ${DIFF_DIR}\n`);
 
-    // 1. Setup output directory
+
     await fs.mkdir(DIFF_DIR, { recursive: true });
 
-    // 2. Get list of reference images
     const referenceFiles = await fs.readdir(REFERENCE_DIR);
     const imageFiles = referenceFiles.filter(file => /\.(png|jpg|jpeg)$/i.test(file));
 
@@ -39,14 +35,12 @@ class FolderComparer {
 
     const results = [];
 
-    // 3. Loop and compare each image
     for (const filename of imageFiles) {
       const refPath = path.join(REFERENCE_DIR, filename);
       const actualPath = path.join(ACTUAL_DIR, filename);
       const diffPath = path.join(DIFF_DIR, `diff-${filename}`);
 
       try {
-        // Check if the actual file exists before trying to load it
         await fs.access(actualPath);
 
         const refImage = await loadImage(refPath);
@@ -75,8 +69,7 @@ class FolderComparer {
         results.push({ filename, ok: false, error: error.message });
       }
     }
-    
-    // 4. Print final report
+
     this.printReport(results);
   }
 
@@ -104,7 +97,6 @@ class FolderComparer {
   }
 }
 
-// Run if executed directly
 if (require.main === module) {
   const comparer = new FolderComparer();
   comparer.run().catch(error => {

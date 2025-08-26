@@ -1,0 +1,66 @@
+name: Build and Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64-18.17.0
+            output: visual-regression-engine-linux
+          - os: windows-latest  
+            target: windows-x64-18.17.0
+            output: visual-regression-engine-win.exe
+          - os: macos-latest
+            target: darwin-x64-18.17.0
+            output: visual-regression-engine-macos
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build TypeScript
+      run: npm run build
+      
+    - name: Install nexe
+      run: npm install -g nexe@4.0.0-rc.6
+      
+    - name: Build binary
+      run: nexe dist/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.output }}
+        path: binaries/${{ matrix.output }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          visual-regression-engine-win.exe/visual-regression-engine-win.exe
+          visual-regression-engine-linux/visual-regression-engine-linux
+          visual-regression-engine-macos/visual-regression-engine-macos
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
