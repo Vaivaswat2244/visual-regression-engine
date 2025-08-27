@@ -10,15 +10,15 @@
     "README.md"
   ],
   "bin":{
-    "visusal-regression-engine": "./bin/cli.js"
+    "visual-regression-engine": "./bin/cli.js"
   },
   "scripts": {
     "build:binaries": "npm run build:win && npm run build:linux && npm run build:macos && npm run build:macos-arm64",
     "build:all-platforms": "npm run build:linux && npm run build:win && npm run build:macos && npm run build:macos-arm64",
-    "build:win": "nexe dist/cli.js --build --verbose --target windows-x64-18.17.0 --output binaries/visual-regression-engine-win.exe",
-    "build:linux": "nexe dist/cli.js --build --verbose --target linux-x64-18.17.0 --output binaries/visual-regression-engine-linux", 
-    "build:macos": "nexe dist/cli.js --build --verbose --target darwin-x64-18.17.0 --output binaries/visual-regression-engine-macos",
-    "build:macos-arm64": "nexe dist/cli.js --build --verbose --target darwin-arm64-18.17.0 --output binaries/visual-regression-engine-macos-arm64"
+    "build:win": "nexe bin/cli.js --build --verbose --target windows-x64-18.17.0 --output binaries/visual-regression-engine-win.exe",
+    "build:linux": "nexe bin/cli.js --build --verbose --target linux-x64-18.17.0 --output binaries/visual-regression-engine-linux", 
+    "build:macos": "nexe bin/cli.js --build --verbose --target darwin-x64-18.17.0 --output binaries/visual-regression-engine-macos",
+    "build:macos-arm64": "nexe bin/cli.js --build --verbose --target darwin-arm64-18.17.0 --output binaries/visual-regression-engine-macos-arm64"
   },
   "keywords": [
     "visual-testing",

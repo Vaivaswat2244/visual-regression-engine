@@ -48,12 +48,27 @@ jobs:
       - name: Install nexe
         run: npm install -g nexe@4.0.0-rc.6
 
-      - name: Build binary with retry
+      # Clear nexe cache to avoid issues
+      - name: Clear nexe cache (Unix)
+        if: runner.os != 'Windows'
+        run: rm -rf ~/.nexe || true
+
+      - name: Clear nexe cache (Windows)
+        if: runner.os == 'Windows'
+        run: Remove-Item -Recurse -Force $env:USERPROFILE\.nexe -ErrorAction SilentlyContinue
+
+      - name: Build binary (Unix - Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           mkdir -p binaries
-          # Try building with explicit Python path
           export PYTHON=$(which python3)
-          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }} || \
+          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+
+      - name: Build binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir -p binaries
+          $env:PYTHON = (Get-Command python).Source
           nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
 
       - name: Test binary (Unix)
