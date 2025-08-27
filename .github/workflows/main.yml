@@ -42,6 +42,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-dev build-essential
 
+      - name: Install NASM (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install nasm -y
+          # Add NASM to PATH
+          $env:PATH += ";C:\Program Files\NASM"
+
       - name: Install dependencies
         run: npm ci
 
@@ -62,14 +69,16 @@ jobs:
         run: |
           mkdir -p binaries
           export PYTHON=$(which python3)
-          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+          # Try without --build flag first (uses pre-compiled Node.js)
+          nexe bin/cli.js --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
 
       - name: Build binary (Windows)
         if: runner.os == 'Windows'
         run: |
           mkdir -p binaries
           $env:PYTHON = (Get-Command python).Source
-          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+          # Try without --build flag first (uses pre-compiled Node.js)
+          nexe bin/cli.js --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
 
       - name: Test binary (Unix)
         if: runner.os != 'Windows'
