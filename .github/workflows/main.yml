@@ -1,4 +1,4 @@
-name: Build and Release Binaries
+name: Build and Release with ESBuild
 
 on:
   push:
@@ -7,20 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-20.04  # Use older Ubuntu with Python 3.8
-            target: linux-x64-18.17.0
-            output: visual-regression-engine-linux
-          - os: windows-2022
-            target: windows-x64-18.17.0
-            output: visual-regression-engine-win.exe
-          - os: macos-12  # Use older macOS with Python 3.9
-            target: darwin-x64-18.17.0
-            output: visual-regression-engine-macos
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -30,70 +17,136 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      # Setup Python with distutils support
-      - name: Setup Python with distutils
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'  # Python 3.9 has distutils
-
-      - name: Install build dependencies (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-dev build-essential
-
-      - name: Install NASM (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install nasm -y
-          # Add NASM to PATH
-          $env:PATH += ";C:\Program Files\NASM"
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Install nexe
-        run: npm install -g nexe@4.0.0-rc.6
+      - name: Install esbuild
+        run: npm install -g esbuild
 
-      # Clear nexe cache to avoid issues
-      - name: Clear nexe cache (Unix)
-        if: runner.os != 'Windows'
-        run: rm -rf ~/.nexe || true
-
-      - name: Clear nexe cache (Windows)
-        if: runner.os == 'Windows'
-        run: Remove-Item -Recurse -Force $env:USERPROFILE\.nexe -ErrorAction SilentlyContinue
-
-      - name: Build binary (Unix - Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Bundle with esbuild
         run: |
-          mkdir -p binaries
-          export PYTHON=$(which python3)
-          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+          mkdir -p dist
+          esbuild bin/cli.js \
+            --bundle \
+            --platform=node \
+            --target=node18 \
+            --format=cjs \
+            --outfile=dist/visual-regression-engine.js \
+            --minify \
+            --sourcemap \
+            --banner:js="#!/usr/bin/env node"
+            --external:canvas \
+            --external:jsdom \
+            --external:pixelmatch
 
-      - name: Build binary (Windows)
-        if: runner.os == 'Windows'
+      - name: Create platform-specific releases
         run: |
-          mkdir -p binaries
-          $env:PYTHON = (Get-Command python).Source
-          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+          mkdir -p releases/{linux,windows,macos}
+          
+          # Copy bundled file to all platforms
+          cp dist/visual-regression-engine.js releases/linux/
+          cp dist/visual-regression-engine.js releases/windows/
+          cp dist/visual-regression-engine.js releases/macos/
+          
+          # Create Unix executable
+          chmod +x releases/linux/visual-regression-engine.js
+          chmod +x releases/macos/visual-regression-engine.js
+          
+          # Create Windows batch file
+          cat > releases/windows/visual-regression-engine.cmd << 'EOF'
+          @echo off
+          node "%~dp0visual-regression-engine.js" %*
+          EOF
+          
+          # Create Unix shell script
+          cat > releases/linux/visual-regression-engine << 'EOF'
+          #!/usr/bin/env node
+          require('./visual-regression-engine.js');
+          EOF
+          chmod +x releases/linux/visual-regression-engine
+          
+          # Create macOS shell script
+          cp releases/linux/visual-regression-engine releases/macos/
 
-      - name: Test binary (Unix)
-        if: runner.os != 'Windows'
+      - name: Create installation instructions
         run: |
-          chmod +x binaries/${{ matrix.output }}
-          ./binaries/${{ matrix.output }} --version || echo "Binary created successfully"
+          # Create README for each platform
+          cat > releases/linux/README.md << 'EOF'
+          # Visual Regression Engine (Linux)
+          
+          ## Quick Start
+          ```bash
+          # Make executable (if needed)
+          chmod +x visual-regression-engine.js
+          
+          # Run directly
+          ./visual-regression-engine.js --help
+          
+          # Or use the shell script
+          ./visual-regression-engine --help
+          ```
+          
+          ## Requirements
+          - Node.js 18+ must be installed
+          EOF
+          
+          cat > releases/macos/README.md << 'EOF'
+          # Visual Regression Engine (macOS)
+          
+          ## Quick Start
+          ```bash
+          # Run directly
+          ./visual-regression-engine.js --help
+          
+          # Or use the shell script
+          ./visual-regression-engine --help
+          ```
+          
+          ## Requirements
+          - Node.js 18+ must be installed
+          EOF
+          
+          cat > releases/windows/README.md << 'EOF'
+          # Visual Regression Engine (Windows)
+          
+          ## Quick Start
+          ```cmd
+          REM Run with batch file
+          visual-regression-engine.cmd --help
+          
+          REM Or run directly with Node.js
+          node visual-regression-engine.js --help
+          ```
+          
+          ## Requirements
+          - Node.js 18+ must be installed
+          EOF
 
-      - name: Test binary (Windows)
-        if: runner.os == 'Windows'
+      - name: Test bundles
         run: |
-          binaries/${{ matrix.output }} --version || echo "Binary created successfully"
+          # Test the bundled JavaScript
+          node releases/linux/visual-regression-engine.js --version || echo "Bundle created successfully"
 
-      - name: Upload artifact
+      - name: Create archives
+        run: |
+          cd releases
+          
+          # Create Linux archive
+          tar -czf visual-regression-engine-linux.tar.gz -C linux .
+          
+          # Create Windows archive  
+          cd windows && zip -r ../visual-regression-engine-windows.zip . && cd ..
+          
+          # Create macOS archive
+          tar -czf visual-regression-engine-macos.tar.gz -C macos .
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.output }}
-          path: binaries/${{ matrix.output }}
+          name: releases
+          path: |
+            releases/*.tar.gz
+            releases/*.zip
 
   release:
     needs: build
@@ -101,16 +154,42 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            visual-regression-engine-win.exe/visual-regression-engine-win.exe
-            visual-regression-engine-linux/visual-regression-engine-linux
-            visual-regression-engine-macos/visual-regression-engine-macos
+            releases/visual-regression-engine-linux.tar.gz
+            releases/visual-regression-engine-windows.zip
+            releases/visual-regression-engine-macos.tar.gz
           generate_release_notes: true
+          body: |
+            ## Visual Regression Engine Release
+            
+            ### Installation Requirements
+            All platforms require Node.js 18+ to be installed.
+            
+            ### Usage
+            
+            **Linux/macOS:**
+            ```bash
+            tar -xzf visual-regression-engine-*.tar.gz
+            ./visual-regression-engine --help
+            ```
+            
+            **Windows:**
+            ```cmd
+            # Extract the ZIP file, then:
+            visual-regression-engine.cmd --help
+            ```
+            
+            ### What's included:
+            - Bundled JavaScript file (works on all platforms)
+            - Platform-specific launcher scripts
+            - Installation instructions
+            
+            No compilation required - just Node.js!
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
