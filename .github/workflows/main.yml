@@ -26,18 +26,7 @@ jobs:
       - name: Bundle with esbuild
         run: |
           mkdir -p dist
-          esbuild bin/cli.js \
-            --bundle \
-            --platform=node \
-            --target=node18 \
-            --format=cjs \
-            --outfile=dist/visual-regression-engine.js \
-            --minify \
-            --sourcemap \
-            --banner:js="#!/usr/bin/env node"
-            --external:canvas \
-            --external:jsdom \
-            --external:pixelmatch
+          esbuild bin/cli.js --bundle --platform=node --target=node18 --format=cjs --outfile=dist/visual-regression-engine.js --minify --sourcemap --banner:js='#!/usr/bin/env node' --external:canvas
 
       - name: Create platform-specific releases
         run: |
