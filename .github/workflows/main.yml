@@ -69,16 +69,14 @@ jobs:
         run: |
           mkdir -p binaries
           export PYTHON=$(which python3)
-          # Try without --build flag first (uses pre-compiled Node.js)
-          nexe bin/cli.js --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
 
       - name: Build binary (Windows)
         if: runner.os == 'Windows'
         run: |
           mkdir -p binaries
           $env:PYTHON = (Get-Command python).Source
-          # Try without --build flag first (uses pre-compiled Node.js)
-          nexe bin/cli.js --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
+          nexe bin/cli.js --build --verbose --target ${{ matrix.target }} --output binaries/${{ matrix.output }}
 
       - name: Test binary (Unix)
         if: runner.os != 'Windows'
