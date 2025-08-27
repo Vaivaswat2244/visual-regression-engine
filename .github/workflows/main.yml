@@ -48,11 +48,6 @@ jobs:
       - name: Install nexe
         run: npm install -g nexe@4.0.0-rc.6
 
-      # Clear nexe cache to avoid issues
-      - name: Clear nexe cache
-        run: |
-          rm -rf ~/.nexe || true
-          
       - name: Build binary with retry
         run: |
           mkdir -p binaries
