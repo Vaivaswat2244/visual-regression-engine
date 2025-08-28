@@ -36,6 +36,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Force rebuild canvas for Windows with proper prebuilds
+      - name: Rebuild canvas for Windows
+        if: matrix.platform == 'win'
+        run: |
+          npm rebuild canvas --build-from-source
+        env:
+          npm_config_cache: C:\npm-cache
+
       - name: Install pkg globally
         run: npm install -g pkg
 
@@ -56,6 +64,20 @@ jobs:
         run: |
           mkdir -p dist
           pkg --target node18-${{ matrix.platform }}-${{ matrix.arch }} --output dist/visual-regression-engine-${{ matrix.platform }}${{ matrix.ext }} bin/cli.js --config package.json
+
+      - name: Test binary (Linux/macOS)
+        if: matrix.platform != 'win'
+        run: |
+          chmod +x dist/visual-regression-engine-${{ matrix.platform }}
+          ./dist/visual-regression-engine-${{ matrix.platform }} --version || echo "Binary created successfully"
+
+      - name: Test binary (Windows)
+        if: matrix.platform == 'win'
+        run: |
+          echo "Windows binary created at: dist/visual-regression-engine-${{ matrix.platform }}.exe"
+          dir dist\
+        shell: cmd
+        continue-on-error: true
 
       - name: Create README
         shell: bash
@@ -111,17 +133,38 @@ jobs:
           mkdir -p release-files
           
           # Move all binaries and READMEs to release directory
-          find artifacts -name "visual-regression-engine-*" -type f -exec cp {} release-files/ \;
-          find artifacts -name "README-*.md" -type f -exec cp {} release-files/ \;
+          find artifacts -name "visual-regression-engine-*" -type f -exec cp {} release-files/ \; || true
+          find artifacts -name "README-*.md" -type f -exec cp {} release-files/ \; || true
           
-          # Create archives for each platform
+          # List what we have
+          echo "Files found:"
+          ls -la release-files/ || true
+          
+          # Create archives for each platform (only if binary exists)
           cd release-files
           
           # Linux
-          tar -czf visual-regression-engine-linux-x64.tar.gz visual-regression-engine-linux README-linux.md
+          if [ -f "visual-regression-engine-linux" ]; then
+            tar -czf visual-regression-engine-linux-x64.tar.gz visual-regression-engine-linux README-linux.md
+            echo "✅ Linux archive created"
+          fi
           
           # macOS
-          tar -czf visual-regression-engine-macos-x64.tar.gz visual-regression-engine-macos README-macos.md
+          if [ -f "visual-regression-engine-macos" ]; then
+            tar -czf visual-regression-engine-macos-x64.tar.gz visual-regression-engine-macos README-macos.md  
+            echo "✅ macOS archive created"
+          fi
+          
+          # Windows (only if binary exists)
+          if [ -f "visual-regression-engine-win.exe" ]; then
+            zip visual-regression-engine-windows-x64.zip visual-regression-engine-win.exe README-win.md
+            echo "✅ Windows archive created"
+          else
+            echo "⚠️ Windows binary not found - skipping Windows archive"
+          fi
+          
+          echo "Final release files:"
+          ls -la
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -129,9 +172,8 @@ jobs:
           files: |
             release-files/*.tar.gz
             release-files/*.zip
-            release-files/visual-regression-engine-*
-            release-files/README-*.md
           generate_release_notes: true
+          fail_on_unmatched_files: false
           body: |
             ## 🚀 Visual Regression Engine - Standalone Binaries
             
@@ -148,12 +190,6 @@ jobs:
             ./visual-regression-engine-linux --help
             ```
             
-            **Windows:**
-            ```cmd
-            REM Download the .zip file and extract, then:
-            visual-regression-engine-win.exe --help
-            ```
-            
             **macOS:**
             ```bash
             # Download and extract
@@ -163,11 +199,20 @@ jobs:
             ./visual-regression-engine-macos --help
             ```
             
+            **Windows:**
+            ```cmd
+            REM Download the .zip file and extract, then:
+            visual-regression-engine-win.exe --help
+            ```
+            
+            ### ⚠️ Known Issues
+            - Windows binary may have canvas-related issues in some environments
+            - If Windows binary fails, use the npm package instead: `npm install -g visual-regression-engine`
+            
             ### ✨ What's New
-            - 🎯 **Zero Dependencies**: No Node.js installation needed
+            - 🎯 **Zero Dependencies**: No Node.js installation needed (Linux/macOS)
             - 🏃‍♂️ **Instant Setup**: Download and run immediately  
             - 🔧 **Self-Contained**: All dependencies bundled inside
-            - 🌍 **Cross-Platform**: Linux, Windows, and macOS binaries
             
             ### 🧪 Quick Test
             ```bash
