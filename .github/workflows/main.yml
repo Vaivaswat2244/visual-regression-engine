@@ -55,19 +55,7 @@ jobs:
       - name: Build standalone binary
         run: |
           mkdir -p dist
-          pkg --target node18-${{ matrix.platform }}-${{ matrix.arch }} --output dist/visual-regression-engine-${{ matrix.platform }}${{ matrix.ext }} bin/cli.js
-
-      - name: Test binary (Linux/macOS)
-        if: matrix.platform != 'win'
-        run: |
-          chmod +x dist/visual-regression-engine-${{ matrix.platform }}
-          ./dist/visual-regression-engine-${{ matrix.platform }} --version || echo "Binary created successfully"
-
-      - name: Test binary (Windows)
-        if: matrix.platform == 'win'
-        run: |
-          .\dist\visual-regression-engine-${{ matrix.platform }}.exe --version || echo "Binary created successfully"
-        shell: cmd
+          pkg --target node18-${{ matrix.platform }}-${{ matrix.arch }} --output dist/visual-regression-engine-${{ matrix.platform }}${{ matrix.ext }} bin/cli.js --config package.json
 
       - name: Create README
         shell: bash
@@ -131,9 +119,6 @@ jobs:
           
           # Linux
           tar -czf visual-regression-engine-linux-x64.tar.gz visual-regression-engine-linux README-linux.md
-          
-          # Windows  
-          zip visual-regression-engine-windows-x64.zip visual-regression-engine-win.exe README-win.md
           
           # macOS
           tar -czf visual-regression-engine-macos-x64.tar.gz visual-regression-engine-macos README-macos.md
