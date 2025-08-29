@@ -1,5 +1,5 @@
 const pixelmatch = require('pixelmatch');
-const { createImageData } = require('canvas');
+const { createImageData, createCanvas } = require('canvas');
 const ClusterAnalyzer = require('./ClusterAnalyzer');
 const ImageProcessor = require('./ImageProcessor');
 const { ValidationError } = require('../utils/errors');
@@ -34,11 +34,14 @@ class ImageComparator {
       }
     );
 
+    const diffImageData = createImageData(diffBuffer, width, height);
+
     if (diffCount === 0) {
       return {
         ok: true,
         diffCount: 0,
-        diffImageData: createImageData(diffBuffer, width, height),
+        diffImageData,
+        diffImage: this._createDiffPngBuffer(diffImageData), // Add PNG buffer
         details: {
           totalDiffPixels: 0,
           significantDiffPixels: 0,
@@ -59,7 +62,8 @@ class ImageComparator {
     return {
       ok,
       diffCount,
-      diffImageData: createImageData(diffBuffer, width, height),
+      diffImageData,
+      diffImage: this._createDiffPngBuffer(diffImageData), // Add PNG buffer
       details: {
         totalDiffPixels: diffCount,
         significantDiffPixels: clusterAnalysis.significantPixels,
@@ -85,6 +89,18 @@ class ImageComparator {
         significantClusters <= options.maxSignificantClusters
       )
     );
+  }
+
+  _createDiffPngBuffer(imageData) {
+    // Create a canvas with the same dimensions
+    const canvas = createCanvas(imageData.width, imageData.height);
+    const ctx = canvas.getContext('2d');
+    
+    // Put the image data onto the canvas
+    ctx.putImageData(imageData, 0, 0);
+    
+    // Convert to PNG buffer
+    return canvas.toBuffer('image/png');
   }
 }
 
